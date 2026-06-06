@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bertie's World 🐾</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crafty+Girls&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue:    #85D4FF;
+      --magenta: #A21272;
+      --pink:    #F0C3FA;
+      --yellow:  #FFF4AD;
+      --white:   #ffffff;
+      --black:   #1a1a1a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: var(--yellow);
+      color: var(--black);
+      overflow-x: hidden;
+    }
+
+    /* ══ HERO ══ */
+    .hero {
+      position: relative;
+      height: 100vh;
+      min-height: 580px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #111;
+    }
+
+    #heroBg {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0.55;
+      z-index: 0;
+    }
+
+    /* dark gradient so text always readable */
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom,
+        rgba(0,0,0,0.35) 0%,
+        rgba(0,0,0,0.15) 50%,
+        rgba(0,0,0,0.55) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* upload label shown when no video yet */
+    .hero-upload-label {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      color: rgba(255,255,255,0.3);
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+    .hero-upload-label:hover { color: rgba(255,255,255,0.6); }
+    .hero-upload-label .icon { font-size: 2.8rem; }
+    #heroInput { display: none; }
+
+    /* once video loaded, hide the label */
+    .hero.has-video .hero-upload-label { display: none; }
+
+    /* small "change video" button after load */
+    .change-video-btn {
+      display: none;
+      position: absolute;
+      bottom: 1.2rem;
+      right: 1.5rem;
+      z-index: 10;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.7);
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.72rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 0.07em;
+    }
+    .hero.has-video .change-video-btn { display: block; }
+
+    .hero-content {
+      position: relative;
+      z-index: 5;
+      text-align: center;
+      padding: 2rem;
+      animation: fadeDown 1s ease both;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1 {
+      font-family: 'Crafty Girls', cursive;
+      font-size: clamp(3rem, 9vw, 6.5rem);
+      color: var(--white);
+      text-shadow: 3px 3px 0 rgba(133,212,255,0.5), 0 4px 24px rgba(0,0,0,0.4);
+      line-height: 1.1;
+      animation: fadeDown 1s 0.15s ease both;
+    }
+
+    .hero p {
+      font-size: clamp(0.95rem, 2.2vw, 1.25rem);
+      color: var(--yellow);
+      margin: 1.2rem auto;
+      max-width: 500px;
+      font-weight: 500;
+      animation: fadeDown 1s 0.3s ease both;
+    }
+
+    .hero-btn {
+      display: inline-block;
+      margin-top: 0.6rem;
+      padding: 0.8rem 2.2rem;
+      background: var(--blue);
+      color: var(--black);
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(133,212,255,0.45);
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeDown 1s 0.45s ease both;
+    }
+    .hero-btn:hover {
+      transform: translateY(-3px) scale(1.04);
+      box-shadow: 0 8px 28px rgba(133,212,255,0.6);
+    }
+
+    /* ══ SHARED ══ */
+    section { padding: 4rem 2rem; }
+
+    .section-header {
+      font-family: 'Crafty Girls', cursive;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: var(--black);
+      margin-bottom: 2.5rem;
+      position: relative;
+      display: inline-block;
+    }
+    .section-header::after {
+      content: '';
+      position: absolute;
+      bottom: -6px; left: 0;
+      width: 55%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--blue), transparent);
+      border-radius: 2px;
+    }
+
+    /* reveal on scroll */
+    .reveal {
+      opacity: 0;
+      transform: translateY(36px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ══ TIMELINE ══ */
+    .timeline-section {
+      background: var(--yellow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .timeline-track {
+      display: flex;
+      align-items: flex-start;
+      overflow-x: auto;
+      padding: 2rem 2rem 3rem;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: var(--blue) rgba(133,212,255,0.2);
+      gap: 0.5rem;
+    }
+    .timeline-track::-webkit-scrollbar { height: 5px; }
+    .timeline-track::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 3px; }
+
+    .timeline-item {
+      scroll-snap-align: center;
+      flex-shrink: 0;
+      width: clamp(150px, 20vw, 230px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      position: relative;
+      padding: 0 0.6rem;
+      cursor: pointer;
+      transition: transform 0.25s;
+    }
+    .timeline-item:nth-child(even) { margin-top: 56px; }
+    .timeline-item:nth-child(odd)  { margin-top: 0; }
+    .timeline-item:hover { transform: scale(1.05); }
+
+    .timeline-photo-wrap { position: relative; width: 100%; }
+
+    .timeline-photo-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      border: 3px solid var(--white);
+      background: var(--blue);
+      transform: rotate(-4deg) translate(-3px, 4px);
+      z-index: 0;
+    }
+
+    .timeline-photo {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 3px solid var(--white);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+      display: block;
+      background: linear-gradient(135deg, var(--blue), var(--yellow));
+    }
+
+    .timeline-placeholder {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      aspect-ratio: 3/4;
+      border-radius: 14px;
+      border: 3px dashed rgba(133,212,255,0.6);
+      background: rgba(133,212,255,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      color: rgba(0,0,0,0.3);
+      font-family: 'Quicksand', sans-serif;
+      cursor: pointer;
+    }
+    .timeline-placeholder .big { font-size: 2rem; }
+
+    /* paw connector row between items */
+    .paw-connector {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      align-self: center;
+      flex-shrink: 0;
+      font-size: 1rem;
+      opacity: 0.35;
+      color: var(--black);
+      margin-top: 30px;
+    }
+
+    .timeline-dot {
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--blue);
+      border: 3px solid var(--white);
+      box-shadow: 0 0 0 2px var(--blue);
+    }
+
+    .timeline-date {
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: var(--black);
+      letter-spacing: 0.04em;
+    }
+    .timeline-caption {
+      font-size: 0.75rem;
+      color: #555;
+      text-align: center;
+      font-style: italic;
+    }
+
+    /* floating paws */
+    .paw-field { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .paw {
+      position: absolute;
+      opacity: 0;
+      animation: floatPaw linear infinite;
+    }
+    @keyframes floatPaw {
+      0%   { transform: translateY(0)    rotate(0deg);  opacity: 0; }
+      15%  { opacity: 0.28; }
+      85%  { opacity: 0.22; }
+      100% { transform: translateY(-130px) rotate(18deg); opacity: 0; }
+    }
+
+    .scroll-hint {
+      text-align: center;
+      padding: 0.5rem;
+      color: rgba(0,0,0,0.4);
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+    }
+    .scroll-hint span { display: inline-block; animation: nudge 1.5s infinite; }
+    @keyframes nudge {
+      0%,100% { transform: translateX(0); }
+      50%      { transform: translateX(6px); }
+    }
+
+    /* ══ GRID ══ */
+    .grid-section { background: var(--blue); }
+    .grid-section .section-header { color: var(--black); }
+    .grid-section .section-header::after { background: linear-gradient(90deg, var(--yellow), transparent); }
+
+    .photo-grid {
+      columns: 2 180px;
+      column-gap: 1rem;
+    }
+    .grid-photo-wrap {
+      break-inside: avoid;
+      margin-bottom: 1rem;
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.25s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    }
+    .grid-photo-wrap:hover { transform: scale(1.03); }
+    .grid-photo-wrap img { width: 100%; display: block; min-height: 100px; }
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.25s;
+      display: flex;
+      align-items: flex-end;
+      padding: 0.7rem;
+      color: white;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .grid-photo-wrap:hover .grid-overlay { opacity: 1; }
+
+    /* empty state */
+    .grid-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 3rem;
+      color: rgba(0,0,0,0.3);
+      font-size: 0.9rem;
+      border: 2px dashed rgba(0,0,0,0.15);
+      border-radius: 20px;
+    }
+    .grid-empty .icon { font-size: 3rem; }
+
+    /* ══ UPLOAD ══ */
+    .upload-section { background: var(--yellow); }
+
+    .drop-zone {
+      border: 3px dashed var(--blue);
+      border-radius: 24px;
+      padding: 2.8rem 2rem;
+      background: rgba(133,212,255,0.1);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      max-width: 580px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      background: rgba(133,212,255,0.25);
+      transform: scale(1.02);
+    }
+    .drop-zone .icon { font-size: 2.8rem; }
+    .drop-zone p { font-size: 1rem; color: var(--black); font-weight: 600; margin-top: 0.5rem; }
+    .drop-zone small { color: #666; font-size: 0.8rem; }
+    #photoInput { display: none; }
+
+    /* ══ LIGHTBOX ══ */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 80vh;
+      border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 1.5rem; right: 2rem;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+    .lightbox-caption {
+      color: rgba(255,255,255,0.65);
+      font-size: 0.88rem;
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    /* ══ FOOTER ══ */
+    footer {
+      background: var(--black);
+      color: var(--white);
+      text-align: center;
+      padding: 2rem;
+    }
+    footer h3 {
+      font-family: 'Crafty Girls', cursive;
+      font-size: 1.6rem;
+      color: var(--blue);
+      margin-bottom: 0.4rem;
+    }
+    footer p { opacity: 0.55; font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<section class="hero" id="hero">
+  <video id="heroBg" autoplay muted loop playsinline></video>
+
+  <label class="hero-upload-label" for="heroInput">
+    <span class="icon">🎬</span>
+    Click to add Bert's video
+    <span style="font-size:0.72rem;opacity:0.7;">(it'll play as the background)</span>
+  </label>
+  <input type="file" id="heroInput" accept="video/*">
+
+  <button class="change-video-btn" onclick="document.getElementById('heroInput').click()">⟳ change video</button>
+
+  <div class="hero-content">
+    <h1>Welcome to<br>Bertie's World 🐾</h1>
+    <p>This site virtually documents our memories and journey with the most precious baby boy!!</p>
+    <a href="#timeline" class="hero-btn">Explore ✨</a>
+  </div>
+</section>
+
+<!-- ══ TIMELINE ══ -->
+<section class="timeline-section" id="timeline">
+  <div class="paw-field" id="pawField"></div>
+  <div style="padding: 0 2rem;">
+    <h2 class="section-header reveal">Bert's journey with us so far:</h2>
+  </div>
+  <div class="timeline-track" id="timelineTrack"></div>
+  <div class="scroll-hint">scroll to see more <span>→</span></div>
+</section>
+
+<!-- ══ PHOTO GRID ══ -->
+<section class="grid-section" id="gallery">
+  <h2 class="section-header reveal">All of Bert's Moments 📸</h2>
+  <div class="photo-grid reveal" id="photoGrid">
+    <div class="grid-empty" id="gridEmpty">
+      <span class="icon">🐾</span>
+      Upload photos below and they'll appear here!
+    </div>
+  </div>
+</section>
+
+<!-- ══ UPLOAD ══ -->
+<section class="upload-section">
+  <h2 class="section-header reveal">Add New Photos 📷</h2>
+  <div class="drop-zone reveal" id="dropZone">
+    <div class="icon">📸</div>
+    <p>Drop Bert's photos here or click to upload</p>
+    <small>JPG · PNG · HEIC — multiple files welcome!<br>Dates are read automatically from photo metadata.</small>
+    <input type="file" id="photoInput" accept="image/*" multiple>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <h3>Bertie's World 🐾</h3>
+  <p>Made with 💖 for the most precious baby boy · Adopted November 2025</p>
+</footer>
+
+<!-- ══ LIGHTBOX ══ -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<script>
+  // ── Hero video ──
+  document.getElementById('heroInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const vid = document.getElementById('heroBg');
+    vid.src = URL.createObjectURL(file);
+    vid.play();
+    document.getElementById('hero').classList.add('has-video');
+  });
+
+  // ── Timeline state ──
+  // Each entry: { src, date (Date obj), caption, file }
+  let timelinePhotos = [];
+
+  function formatDate(d) {
+    if (!d) return 'Unknown date';
+    return d.toLocaleDateString('en-US', { month:'2-digit', day:'2-digit', year:'numeric' });
+  }
+
+  // Read EXIF date from JPEG; falls back to file.lastModified
+  function getPhotoDate(file) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const buf = e.target.result;
+        const view = new DataView(buf);
+        // Quick EXIF scan for DateTimeOriginal tag (0x9003)
+        try {
+          if (view.getUint16(0) !== 0xFFD8) throw 'not jpeg';
+          let offset = 2;
+          while (offset < view.byteLength - 4) {
+            const marker = view.getUint16(offset);
+            const length = view.getUint16(offset + 2);
+            if (marker === 0xFFE1) { // APP1 / EXIF
+              const exifStr = String.fromCharCode(...new Uint8Array(buf, offset + 4, Math.min(length, 8000)));
+              const m = exifStr.match(/(\d{4}):(\d{2}):(\d{2})/);
+              if (m) {
+                resolve(new Date(+m[1], +m[2]-1, +m[3]));
+                return;
+              }
+            }
+            offset += 2 + length;
+          }
+        } catch(_) {}
+        resolve(new Date(file.lastModified));
+      };
+      reader.onerror = () => resolve(new Date(file.lastModified));
+      reader.readAsArrayBuffer(file.slice(0, 64 * 1024));
+    });
+  }
+
+  function renderTimeline() {
+    const track = document.getElementById('timelineTrack');
+    track.innerHTML = '';
+    // Sort by date ascending
+    const sorted = [...timelinePhotos].sort((a, b) => a.date - b.date);
+
+    if (sorted.length === 0) {
+      const placeholder = document.createElement('div');
+      placeholder.style.cssText = 'padding:2rem;color:rgba(0,0,0,0.3);font-size:0.9rem;font-family:Quicksand,sans-serif;';
+      placeholder.textContent = 'Upload photos below — they\'ll appear here in timeline order 🐾';
+      track.appendChild(placeholder);
+      return;
+    }
+
+    sorted.forEach((item, i) => {
+      // paw connector before each item (except first)
+      if (i > 0) {
+        const conn = document.createElement('div');
+        conn.className = 'paw-connector';
+        conn.innerHTML = '🐾🐾🐾';
+        track.appendChild(conn);
+      }
+
+      const el = document.createElement('div');
+      el.className = 'timeline-item';
+      el.innerHTML = `
+        <div class="timeline-photo-wrap">
+          <img class="timeline-photo" src="${item.src}" alt="Bert ${formatDate(item.date)}">
+        </div>
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">${formatDate(item.date)}</div>
+        <div class="timeline-caption">${item.caption || ''}</div>
+      `;
+      el.querySelector('.timeline-photo-wrap').onclick = () =>
+        openLightbox(item.src, formatDate(item.date));
+      track.appendChild(el);
+    });
+  }
+  renderTimeline();
+
+  // ── Photo uploads ──
+  let gridHasPhotos = false;
+
+  async function handleFiles(files) {
+    for (const file of Array.from(files)) {
+      const src = URL.createObjectURL(file);
+      const date = await getPhotoDate(file);
+      timelinePhotos.push({ src, date, caption: '', file });
+      addToGrid(src, formatDate(date));
+    }
+    renderTimeline();
+  }
+
+  function addToGrid(src, caption) {
+    if (!gridHasPhotos) {
+      document.getElementById('gridEmpty').remove();
+      gridHasPhotos = true;
+    }
+    const grid = document.getElementById('photoGrid');
+    const wrap = document.createElement('div');
+    wrap.className = 'grid-photo-wrap';
+    wrap.innerHTML = `<img src="${src}" alt="Bert" loading="lazy"><div class="grid-overlay">${caption}</div>`;
+    wrap.onclick = () => openLightbox(src, caption);
+    grid.appendChild(wrap);
+  }
+
+  // Drop zone
+  const dropZone = document.getElementById('dropZone');
+  const photoInput = document.getElementById('photoInput');
+  dropZone.addEventListener('click', () => photoInput.click());
+  photoInput.addEventListener('change', () => handleFiles(photoInput.files));
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  // ── Lightbox ──
+  function openLightbox(src, caption) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxCaption').textContent = caption;
+    document.getElementById('lightbox').classList.add('open');
+  }
+  function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+  document.getElementById('lightbox').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeLightbox();
+  });
+
+  // ── Scroll reveal ──
+  const revealObs = new IntersectionObserver(entries =>
+    entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
+    { threshold: 0.12 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+  // ── Floating paws ──
+  const pawField = document.getElementById('pawField');
+  function spawnPaw() {
+    const p = document.createElement('span');
+    p.textContent = '🐾';
+    p.className = 'paw';
+    p.style.left = (Math.random() * 96) + '%';
+    p.style.bottom = '-10px';
+    p.style.fontSize = (1 + Math.random() * 1.2) + 'rem';
+    p.style.animationDuration = (5 + Math.random() * 5) + 's';
+    p.style.animationDelay = '0s';
+    pawField.appendChild(p);
+    setTimeout(() => p.remove(), 11000);
+  }
+  setInterval(spawnPaw, 2000);
+  spawnPaw();
+</script>
+</body>
+</html>
